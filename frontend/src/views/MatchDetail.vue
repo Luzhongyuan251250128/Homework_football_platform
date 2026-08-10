@@ -226,7 +226,8 @@ async function fetchPosts() {
 async function fetchPredictions() {
   predLoading.value = true;
   try {
-    predictions.value = await api.get(`/matches/${route.params.id}/predictions`);
+    const data = await api.get(`/matches/${route.params.id}/predictions`);
+    predictions.value = data.predictions;
   } catch (err) {
     predictions.value = [];
     error.value = err.message;

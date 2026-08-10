@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+
+AGENTS.md
+docs/提交教程.md
+start-local.bat
+stop-local.bat
+���ʹ���.bat

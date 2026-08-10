@@ -1,0 +1,84 @@
+name: Build Docker Images (X64)
+
+# 推送代码到 main 分支后自动执行；也可在 Actions 页面手动点击运行
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest          # GitHub 云端 Linux X64 构建机（自带 Docker）
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 构建镜像
+        run: docker compose build
+
+      - name: 导出镜像产物包 (docker save 格式, X64)
+        run: |
+          mkdir -p artifacts
+          docker save football-backend | gzip > artifacts/football-backend-image.tar.gz
+          docker save football-frontend | gzip > artifacts/football-frontend-image.tar.gz
+
+      - name: 启动完整服务 (mysql + backend + frontend)
+        run: docker compose up -d
+
+      - name: 等待后端就绪
+        run: |
+          ok=0
+          for i in $(seq 1 40); do
+            if curl -sf http://localhost:3000/api/time >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then echo "后端 40 秒内未就绪"; exit 1; fi
+          echo "== GET /api/time (直连后端) =="
+          curl -s http://localhost:3000/api/time
+
+      - name: 端到端冒烟测试 (注册→登录→预测→推进时间→结算→讨论)
+        run: |
+          BASE=http://localhost:3000
+          echo "== 1. 注册新用户 =="
+          curl -s -X POST $BASE/api/auth/register -H 'Content-Type: application/json' \
+            -d '{"username":"ciuser","password":"123456","nickname":"云端测试员"}'
+          echo; echo "== 2. 登录 =="
+          TOKEN=$(curl -s -X POST $BASE/api/auth/login -H 'Content-Type: application/json' \
+            -d '{"username":"ciuser","password":"123456"}' | sed -E 's/.*"token":"([^"]+)".*/\1/')
+          echo "token 长度: ${#TOKEN}"
+          echo "== 3. 预测比赛 #7 (墨西哥vs波兰) =="
+          curl -s -X POST $BASE/api/matches/7/predictions -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' -d '{"pred_home":1,"pred_away":2}'
+          echo; echo "== 4. admin 登录并推进虚拟时间 +8 小时 =="
+          ADMIN=$(curl -s -X POST $BASE/api/auth/login -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"admin123"}' | sed -E 's/.*"token":"([^"]+)".*/\1/')
+          curl -s -X PUT $BASE/api/admin/time -H "Authorization: Bearer $ADMIN" \
+            -H 'Content-Type: application/json' -d '{"hours":8}'
+          echo; echo "== 5. 个人中心积分 (应为 3: 猜中比分) =="
+          curl -s $BASE/api/me/points -H "Authorization: Bearer $TOKEN"
+          echo; echo "== 6. 完赛后比赛 #7 的自动讨论帖 =="
+          curl -s $BASE/api/matches/7/posts | head -c 500
+          echo
+
+      - name: 前端页面测试 (经 nginx 代理)
+        run: |
+          echo "== GET / =="
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" http://localhost/
+          echo "== GET /api/time via nginx =="
+          curl -s http://localhost/api/time
+          echo
+
+      - name: 收集测试证据
+        run: |
+          docker compose ps > artifacts/services.txt 2>&1 || true
+          docker compose logs --no-color > artifacts/compose-logs.txt 2>&1 || true
+          curl -s http://localhost:3000/api/matches > artifacts/api-matches.json 2>&1 || true
+
+      - name: 停止并清理服务
+        run: docker compose down -v
+
+      - name: 上传镜像产物包
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-images-x64
+          path: artifacts/

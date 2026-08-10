@@ -5,7 +5,8 @@
 
 1. GitHub 仓库地址
 ------------------------------------------------------------
-https://github.com/xxxx/xxxx        （私有仓库已邀请：sunshinezxf@hotmail.com）
+https://github.com/Luzhongyuan251250128/Homework_football_platform
+（私有仓库已邀请：sunshinezxf@hotmail.com）
 （本项目完整源码、数据库初始化脚本与 API 文档均在仓库中）
 
 2. Docker Image / Docker Compose 启动命令

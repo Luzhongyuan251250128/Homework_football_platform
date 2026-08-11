@@ -55,8 +55,8 @@
             <span class="chip">我的预测：{{ myPrediction.predHome }} - {{ myPrediction.predAway }}</span>
             <span v-if="match.status === 'upcoming'" class="dim">等待开赛，锁定结果</span>
             <span v-else-if="match.status === 'live'" class="dim">比赛进行中</span>
-            <span v-else class="pts-chip" :class="ptsClass">
-              {{ ptsText }}
+            <span v-else class="pts-chip" :class="ptsClass()">
+              {{ ptsText() }}
             </span>
           </div>
         </template>

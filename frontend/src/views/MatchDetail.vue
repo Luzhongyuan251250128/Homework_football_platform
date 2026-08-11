@@ -16,7 +16,7 @@
 
       <div class="scoreboard">
         <div class="team-block">
-          <div class="team-name">{{ match.homeTeam }}</div>
+          <router-link :to="`/teams/${match.homeTeam}`" class="team-name-link">{{ match.homeTeam }}</router-link>
         </div>
         <div class="score-block">
           <template v-if="match.status === 'upcoming'">
@@ -33,7 +33,7 @@
           </template>
         </div>
         <div class="team-block">
-          <div class="team-name">{{ match.awayTeam }}</div>
+          <router-link :to="`/teams/${match.awayTeam}`" class="team-name-link">{{ match.awayTeam }}</router-link>
         </div>
       </div>
 
@@ -117,9 +117,31 @@
               </div>
               <p class="post-content">{{ post.content }}</p>
               <div class="comments">
-                <div v-for="c in post.comments" :key="c.id" class="comment-item">
-                  <span class="nick small">{{ c.author.nickname }}：</span>
-                  <span>{{ c.content }}</span>
+                <div v-for="c in topComments(post)" :key="c.id" class="comment-item">
+                  <div class="comment-line">
+                    <span class="nick small">{{ c.author.nickname }}：</span>
+                    <span>{{ c.content }}</span>
+                  </div>
+                  <div class="comment-actions">
+                    <button v-if="userStore.isLoggedIn" class="reply-btn" @click="toggleReply(post, c)">回复</button>
+                  </div>
+                  <div v-if="replyingTo === c.id" class="reply-form">
+                    <input
+                      v-model="replyTexts[post.id]"
+                      class="input comment-input"
+                      :placeholder="`回复 @${c.author.nickname}…`"
+                      maxlength="300"
+                      @keyup.enter="submitReply(post, c)"
+                    />
+                    <button class="btn btn-sm" :disabled="commenting || !(replyTexts[post.id] || '').trim()" @click="submitReply(post, c)">
+                      发送
+                    </button>
+                  </div>
+                  <div v-for="r in repliesOf(post, c.id)" :key="r.id" class="reply-line">
+                    <span class="nick small">{{ r.author.nickname }}</span>
+                    <span class="dim small">回复 @{{ parentNick(post, r.parentId) }}：</span>
+                    <span>{{ r.content }}</span>
+                  </div>
                 </div>
               </div>
               <div class="comment-form">
@@ -178,6 +200,8 @@ const posts = ref([]);
 const postsLoading = ref(true);
 const commenting = ref(false);
 const commentTexts = ref({});
+const replyingTo = ref(null);
+const replyTexts = ref({});
 let timer = null;
 
 const myPrediction = computed(() => match.value?.myPrediction || null);
@@ -290,6 +314,40 @@ async function submitComment(post) {
   }
 }
 
+function topComments(post) {
+  return post.comments.filter((c) => !c.parentId);
+}
+
+function repliesOf(post, parentId) {
+  return post.comments.filter((c) => c.parentId === parentId);
+}
+
+function parentNick(post, parentId) {
+  const p = post.comments.find((c) => c.id === parentId);
+  return p ? p.author.nickname : '';
+}
+
+function toggleReply(post, c) {
+  replyingTo.value = replyingTo.value === c.id ? null : c.id;
+  replyTexts.value[post.id] = '';
+}
+
+async function submitReply(post, c) {
+  const text = (replyTexts.value[post.id] || '').trim();
+  if (!text) return;
+  commenting.value = true;
+  try {
+    await api.post(`/posts/${post.id}/comments`, { content: text, parent_id: c.id });
+    replyTexts.value[post.id] = '';
+    replyingTo.value = null;
+    await fetchPosts();
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    commenting.value = false;
+  }
+}
+
 watch(() => vtimeStore.virtualTime, () => {
   fetchMatch();
   fetchPosts();
@@ -353,10 +411,18 @@ onUnmounted(() => {
   padding: 26px 20px;
 }
 
-.team-name {
+.team-name-link {
   font-size: 20px;
   font-weight: 800;
   text-align: center;
+  display: block;
+  color: var(--text);
+  transition: color 0.15s;
+}
+
+.team-name-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .score-block {
@@ -533,6 +599,43 @@ onUnmounted(() => {
 .comment-item {
   font-size: 13px;
   color: var(--text-dim);
+}
+
+.comment-line {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.comment-actions {
+  margin-top: 4px;
+}
+
+.reply-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 0;
+}
+
+.reply-btn:hover {
+  color: var(--accent);
+}
+
+.reply-form {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.reply-line {
+  font-size: 12px;
+  color: var(--text-dim);
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+  margin-top: 6px;
+  line-height: 1.5;
 }
 
 .comment-form {

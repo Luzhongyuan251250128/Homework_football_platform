@@ -65,10 +65,23 @@
 发帖（需登录）。参数：`content`（2~500 字符）。仅比赛已完赛（finished）后可发，否则 409。
 
 ### GET /api/posts/:id/comments
-帖子评论列表（公开）。
+帖子评论列表（公开）。每条含 `parentId`（NULL=顶层评论，非 NULL=回复）。
 
 ### POST /api/posts/:id/comments
-评论（需登录）。参数：`content`（1~300 字符）。
+评论（需登录）。参数：`content`（1~300 字符）、`parent_id`（可选，回复某条评论）。
+校验：目标评论存在、属于同一帖子、且为顶层评论——**仅支持单层回复**（回复的回复返回 400）。
+
+## 5.1 球队主页（球队档案 + 球队评价区）
+
+### GET /api/teams/:name
+球队主页数据（公开，登录时附我的预测数据）。`name` 需 URL 编码（如 `/api/teams/%E9%98%BF%E6%A0%B9%E5%BB%B7`）。
+返回：球队档案（名称/联赛/类型/评价）、战绩（场/胜/平/负/进/失/胜率，按已完赛统计）、过往比赛列表（含结果 win/draw/loss）、该队比赛预测热度；登录时含 `myPredictions`（明细 + 统计：猜中比分次数、猜中胜负次数、未中次数、累计得分）。
+
+### GET /api/teams/:name/comments
+球队评价区评论列表（公开，含 `parentId`）。
+
+### POST /api/teams/:name/comments
+发布评价或回复（需登录）。参数：`content`（1~300 字符）、`parent_id`（可选，回复某条评价，单层回复校验同上）。
 
 ## 6. 个人中心
 

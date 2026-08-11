@@ -43,7 +43,7 @@ t ≥ 结束        → finished（已结束）：显示比分；结算积分；
 
 前端顶部导航常驻显示"虚拟时间：YYYY-MM-DD HH:mm"；admin 登录后可见时间控制台（+15分钟 / +1小时 / 设定时间 按钮），任何推进操作后前端立即刷新数据。
 
-## 3. 数据模型（6 张表）
+## 3. 数据模型（8 张表）
 
 ### users
 | 字段 | 类型 | 说明 |
@@ -99,6 +99,26 @@ t ≥ 结束        → finished（已结束）：显示比分；结算积分；
 | id | INT PK AUTO_INCREMENT | |
 | post_id | INT NOT NULL FK→posts.id | |
 | user_id | INT NOT NULL FK→users.id | |
+| parent_id | INT NULL FK→comments.id | 被回复的评论 id；NULL=顶层评论，**仅支持单层回复**（回复的回复被 API 拒绝） |
+| content | TEXT NOT NULL | |
+| created_at | DATETIME DEFAULT CURRENT_TIMESTAMP | |
+
+### teams（球队档案，按队名与 matches 匹配，无外键）
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | INT PK AUTO_INCREMENT | |
+| name | VARCHAR(50) UNIQUE NOT NULL | 队名，与 matches 中一致 |
+| league | ENUM('world_cup','spl') NOT NULL | |
+| type | VARCHAR(20) NOT NULL | 国家队 / 城市队 |
+| description | VARCHAR(500) NOT NULL DEFAULT '' | 球队档案评价（预测相关话术） |
+
+### team_comments（球队评价区评论，支持单层回复）
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | INT PK AUTO_INCREMENT | |
+| team_id | INT NOT NULL FK→teams.id | |
+| user_id | INT NOT NULL FK→users.id | |
+| parent_id | INT NULL FK→team_comments.id | 被回复的评论 id；单层 |
 | content | TEXT NOT NULL | |
 | created_at | DATETIME DEFAULT CURRENT_TIMESTAMP | |
 
@@ -130,7 +150,9 @@ t ≥ 结束        → finished（已结束）：显示比分；结算积分；
 - **世界杯**：小组赛 A~F 组 × 3 轮（每轮 6 场），虚拟赛程 2026-07-06 ~ 07-15，真实强队对阵（阿根廷、法国、英格兰、德国、西班牙、巴西…）。
 - **苏超（江苏省城市足球联赛）**：13 个设区市队伍——南京、苏州、无锡、常州、南通、徐州、扬州、泰州、镇江、淮安、盐城、连云港、宿迁；第 1~2 轮各 6 场（每轮一支轮空），虚拟赛程 2026-07-07 ~ 07-13。
 - 每场比赛预置最终比分；API 对未开赛比赛隐藏比分（见 §2.3）。
-- **全部 30 场比赛均预置**：预测记录（共 100 条，每场 3~5 条）、帖子（共 35 条，每场 1~2 条）、评论（共 62 条，每条帖子均有评论）。已完赛 8 场的预测已结算（+0/+1/+3 混合），其余在推进虚拟时间完赛后自动结算，用于个人中心展示。
+- **全部 30 场比赛均预置**：预测记录（共 100 条，每场 3~5 条）、帖子（共 35 条，每场 1~2 条）、评论（共 69 条，每条帖子均有评论，含 7 条回复示例）。已完赛 8 场的预测已结算（+0/+1/+3 混合），其余在推进虚拟时间完赛后自动结算，用于个人中心展示。
+- **球队档案**：`teams` 表 31 支球队（世界杯 18 国家队 + 苏超 13 城市队），`description` 为预测相关话术评价。
+- **球队评价区**：`team_comments` 表 37 条（31 条顶层 + 6 条回复），**全部 31 支球队均预置**，作者为演示账号。
 
 ### 4.3 运行时内容生成（兜底机制）
 
@@ -152,8 +174,11 @@ t ≥ 结束        → finished（已结束）：显示比分；结算积分；
 | GET | /api/matches/:id/predictions | 登录 | 该场比赛的预测列表（含预测者昵称、结算得分） |
 | GET | /api/matches/:id/posts | 公开 | 帖子列表（含作者昵称、评论数、评论内容） |
 | POST | /api/matches/:id/posts | 登录 | 发帖 {content}；校验比赛已 finished |
-| GET | /api/posts/:id/comments | 公开 | 帖子评论列表 |
-| POST | /api/posts/:id/comments | 登录 | 评论 {content} |
+| GET | /api/posts/:id/comments | 公开 | 帖子评论列表（含 parentId，前端分组渲染） |
+| POST | /api/posts/:id/comments | 登录 | 评论 {content, parent_id?}；parent_id 可选：回复某条评论（校验：目标评论存在、属于同一帖子、且为顶层评论，仅单层） |
+| GET | /api/teams/:name | 公开（登录附我的数据） | 球队主页：档案（含评价）、战绩（场/胜/平/负/进/失/胜率）、过往比赛（含胜负平结果）、我的预测明细与准确统计（猜中比分/猜中胜负/合计/累计得分）、该队比赛预测热度 |
+| GET | /api/teams/:name/comments | 公开 | 球队评价区评论列表（含 parentId） |
+| POST | /api/teams/:name/comments | 登录 | 发布/回复评价 {content, parent_id?}（单层回复校验同上） |
 | GET | /api/me/predictions | 登录 | 我的预测记录（比赛信息、我的预测、points_awarded、比赛状态） |
 | GET | /api/me/points | 登录 | 我的积分（总量 + 明细可选） |
 | GET | /api/leaderboard | 公开（登录时附我的排名） | 积分排行榜：仅统计有预测记录的用户；按积分↓、猜中比分次数↓、id↑ 排序，同分同名次；含排名/昵称/积分/预测总数/猜中比分/猜中胜负 |

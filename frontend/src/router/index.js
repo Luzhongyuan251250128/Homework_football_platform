@@ -5,6 +5,7 @@ import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
 import ProfileView from '../views/ProfileView.vue';
 import LeaderboardView from '../views/LeaderboardView.vue';
+import TeamView from '../views/TeamView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,7 +15,8 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
-    { path: '/leaderboard', name: 'leaderboard', component: LeaderboardView }
+    { path: '/leaderboard', name: 'leaderboard', component: LeaderboardView },
+    { path: '/teams/:name', name: 'team', component: TeamView }
   ]
 });
 

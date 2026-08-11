@@ -9,6 +9,8 @@ USE football_db;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS team_comments;
+DROP TABLE IF EXISTS teams;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS predictions;
@@ -87,17 +89,46 @@ CREATE TABLE posts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- 6. comments：帖子评论
+-- 6. comments：帖子评论（支持单层回复：parent_id 指向另一条评论）
 -- ------------------------------------------------------------
 CREATE TABLE comments (
   id         INT PRIMARY KEY AUTO_INCREMENT,
   post_id    INT NOT NULL,
   user_id    INT NOT NULL,
+  parent_id  INT NULL COMMENT '被回复的评论 id（NULL=顶层评论）',
   content    TEXT NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_post (post_id),
-  CONSTRAINT fk_cmt_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-  CONSTRAINT fk_cmt_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  CONSTRAINT fk_cmt_post   FOREIGN KEY (post_id)   REFERENCES posts(id)        ON DELETE CASCADE,
+  CONSTRAINT fk_cmt_user   FOREIGN KEY (user_id)   REFERENCES users(id)        ON DELETE CASCADE,
+  CONSTRAINT fk_cmt_parent FOREIGN KEY (parent_id) REFERENCES comments(id)     ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- 7. teams：球队档案（比赛按队名匹配，无外键依赖）
+-- ------------------------------------------------------------
+CREATE TABLE teams (
+  id          INT PRIMARY KEY AUTO_INCREMENT,
+  name        VARCHAR(50) NOT NULL UNIQUE COMMENT '队名，与 matches 中一致',
+  league      ENUM('world_cup','spl') NOT NULL,
+  type        VARCHAR(20) NOT NULL COMMENT '国家队 / 城市队',
+  description VARCHAR(500) NOT NULL DEFAULT '' COMMENT '球队档案评价（预测相关话术）'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- 8. team_comments：球队评价区评论（支持单层回复）
+-- ------------------------------------------------------------
+CREATE TABLE team_comments (
+  id         INT PRIMARY KEY AUTO_INCREMENT,
+  team_id    INT NOT NULL,
+  user_id    INT NOT NULL,
+  parent_id  INT NULL COMMENT '被回复的评论 id（NULL=顶层评论）',
+  content    TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_team (team_id),
+  CONSTRAINT fk_tc_team   FOREIGN KEY (team_id)   REFERENCES teams(id)          ON DELETE CASCADE,
+  CONSTRAINT fk_tc_user   FOREIGN KEY (user_id)   REFERENCES users(id)          ON DELETE CASCADE,
+  CONSTRAINT fk_tc_parent FOREIGN KEY (parent_id) REFERENCES team_comments(id)  ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
@@ -314,5 +345,89 @@ INSERT INTO comments (post_id, user_id, content) VALUES
 (35, 3,  '中场绞肉战，谁进一球谁赢'),
 (5,  9,  '美国队这届真不一样，防守反击打得漂亮'),
 (8,  10, '荷兰后卫线今晚就是叹息之墙');
+
+-- ---------- 评论回复示例（parent_id 指向被回复的评论，单层） ----------
+INSERT INTO comments (post_id, user_id, parent_id, content) VALUES
+(1, 3,  1,  '同款！下一场继续押阿根廷'),
+(3, 6,  3,  '同意，法国三球完胜毫无悬念'),
+(3, 11, 5,  '贝林厄姆确实全队最亮眼'),
+(6, 5,  6,  '那波攻势吓出我一身冷汗'),
+(7, 9,  8,  '差一点就是 3 分，太可惜了'),
+(9, 8,  10, '下半场明显跑不动了'),
+(11, 6, 12, '南通差的就是临门一脚');
+
+-- ---------- 球队档案（31 支，评价话术与预测相关） ----------
+INSERT INTO teams (id, name, league, type, description) VALUES
+(1,  '阿根廷', 'world_cup', '国家队', '平台最热门预测对象之一，球迷疯狂押注梅西带队的每一场，猜中率居高不下。'),
+(2,  '墨西哥', 'world_cup', '国家队', '预测常客但常爆冷门，敢押它输球的都是老球迷。'),
+(3,  '波兰', 'world_cup', '国家队', '预测热度中规中矩，莱万的存在让"波兰进球"成为高频预测盘。'),
+(4,  '法国', 'world_cup', '国家队', '大比分专业户，押它大胜的用户积分稳稳入袋。'),
+(5,  '丹麦', 'world_cup', '国家队', '北欧铁军，用户普遍押小胜或平局，是保守派的心头好。'),
+(6,  '突尼斯', 'world_cup', '国家队', '冷门专业户，敢押它赢的屈指可数，一旦押中就是高分翻盘。'),
+(7,  '英格兰', 'world_cup', '国家队', '预测重灾区：纸面实力强但平局魔咒，让无数用户积分归零。'),
+(8,  '美国', 'world_cup', '国家队', '东道主人气队，预测热度随主场氛围水涨船高。'),
+(9,  '伊朗', 'world_cup', '国家队', '铁血防守标签深入人心，用户普遍押小比分。'),
+(10, '德国', 'world_cup', '国家队', '火力全开型，用户爱押大比分，但后防不稳也让不少预测翻车。'),
+(11, '日本', 'world_cup', '国家队', '传控细腻的技术流预测宠儿，猜中率稳中有升。'),
+(12, '哥斯达黎加', 'world_cup', '国家队', '铁桶阵代表，几乎没人敢押它进球。'),
+(13, '西班牙', 'world_cup', '国家队', '控球率之王，用户常押 1-0 或平局，预测风格与比赛风格一样谨慎。'),
+(14, '荷兰', 'world_cup', '国家队', '全攻全守回归，大比分预测的快乐源泉。'),
+(15, '摩洛哥', 'world_cup', '国家队', '爆冷基因携带者，上届四强的余威让用户又爱又怕。'),
+(16, '巴西', 'world_cup', '国家队', '与阿根廷并列的平台预测顶流，每场预测人次几乎拉满。'),
+(17, '葡萄牙', 'world_cup', '国家队', '巨星效应明显，用户喜欢押"葡萄牙+进球"的经典组合。'),
+(18, '塞尔维亚', 'world_cup', '国家队', '高大中锋型球队，用户多押 2-1 险胜剧本。'),
+(19, '南京', 'spl', '城市队', '苏超人气王，主场战绩稳，预测命中率名列前茅。'),
+(20, '苏州', 'spl', '城市队', '客场表现起伏，用户预测分化严重。'),
+(21, '无锡', 'spl', '城市队', '状态火热的上赛季黑马，近期预测追涨明显。'),
+(22, '常州', 'spl', '城市队', '主场顽强，用户爱押平局。'),
+(23, '南通', 'spl', '城市队', '锋线效率是软肋，不少"押它进球"的预测落空。'),
+(24, '徐州', 'spl', '城市队', '客场抢分能手，冷门预测的常客。'),
+(25, '扬州', 'spl', '城市队', '主场氛围火爆，预测热度紧随南京。'),
+(26, '泰州', 'spl', '城市队', '反击犀利，用户喜欢押它小比分取胜。'),
+(27, '镇江', 'spl', '城市队', '攻防均衡的中庸之选，猜中率平平但稳定。'),
+(28, '淮安', 'spl', '城市队', '防守硬朗，闷平专业户，押 0-0 的稳健派最爱。'),
+(29, '盐城', 'spl', '城市队', '主场龙，预测命中率不错。'),
+(30, '连云港', 'spl', '城市队', '客场虫标签，押它赢的人很少。'),
+(31, '宿迁', 'spl', '城市队', '苏超新军，预测样本少，敢押的都是真爱粉。');
+
+-- ---------- 球队评价区评论（全部 31 队预置，作者为演示账号，部分带回复） ----------
+INSERT INTO team_comments (id, team_id, user_id, parent_id, content) VALUES
+(1,  1,  2,  NULL, '阿根廷我闭眼押，梅西状态无敌，在这支队伍上的预测命中率全场第一！'),
+(2,  1,  3,  1,   '同意，跟着小射手押阿根廷准没错'),
+(3,  2,  5,  NULL, '墨西哥总在我要换台的时候进球，预测它真的要谨慎。'),
+(4,  3,  8,  NULL, '莱万的头球永远可以信任，波兰进球盘很稳。'),
+(5,  4,  7,  NULL, '法国大比分专业户，押它的人积分稳赚。'),
+(6,  4,  6,  5,   '上轮 3-0 我就中了，法国永远的神'),
+(7,  5,  4,  NULL, '丹麦防线稳，押平局的安全选择。'),
+(8,  6,  10, NULL, '敢押突尼斯赢的绝对是勇士，我敬你是条汉子。'),
+(9,  7,  11, NULL, '英格兰纸面强队实际平局大师，我在这上面栽过三次。'),
+(10, 7,  2,  9,   '哈哈，贝林厄姆都救不了英格兰的锋无力'),
+(11, 8,  9,  NULL, '美国主场 buff 太强，预测热度跟着主场走。'),
+(12, 9,  3,  NULL, '伊朗铁桶阵，押小比分就对了。'),
+(13, 10, 6,  NULL, '德国大比分可期但后防漏风，押完记得备好速效救心丸。'),
+(14, 11, 8,  NULL, '日本传控细腻，在这支队伍上的预测命中率一直很稳。'),
+(15, 12, 4,  NULL, '哥斯达黎加就没进过几个球，别押它进球。'),
+(16, 13, 10, NULL, '西班牙控球七成进不了球，押平局的常胜将军。'),
+(17, 14, 5,  NULL, '荷兰全攻全守，大比分预测的快乐源泉。'),
+(18, 15, 7,  NULL, '摩洛哥专治各种不服，爆冷专业户。'),
+(19, 15, 11, 18,  '上次押它爆冷赚了 3 分，记忆犹新'),
+(20, 16, 2,  NULL, '巴西和阿根廷并列预测顶流，每场都有人押。'),
+(21, 16, 9,  20,  '巴西锋线豪华，跟押不会错'),
+(22, 17, 6,  NULL, '葡萄牙巨星多，"葡萄牙+进球"是平台经典组合盘。'),
+(23, 18, 3,  NULL, '塞尔维亚高中锋战术，2-1 剧本常客。'),
+(24, 19, 5,  NULL, '南京主场稳如老狗，苏超预测命中率第一。'),
+(25, 20, 8,  NULL, '苏州客场起伏大，预测它要三思。'),
+(26, 21, 10, NULL, '无锡黑马状态正热，预测追涨没毛病。'),
+(27, 22, 4,  NULL, '常州主场顽强，押平局的稳健派最爱。'),
+(28, 23, 11, NULL, '南通锋线软肋，押它进球要做好心理准备。'),
+(29, 24, 7,  NULL, '徐州客场抢分能手，冷门预测常客。'),
+(30, 25, 2,  NULL, '扬州主场氛围火爆，预测热度紧随南京。'),
+(31, 26, 9,  NULL, '泰州反击犀利，小比分取胜剧本多。'),
+(32, 27, 6,  NULL, '镇江攻防均衡，预测中庸但稳定。'),
+(33, 28, 3,  NULL, '淮安闷平专业户，押 0-0 就对了。'),
+(34, 28, 10, 33,  '上次押淮安 0-0 稳稳收下 3 分'),
+(35, 29, 5,  NULL, '盐城主场龙，预测命中率不错。'),
+(36, 30, 8,  NULL, '连云港客场表现拉胯，押它赢的人很少。'),
+(37, 31, 9,  NULL, '宿迁新军预测样本少，敢押的都是真爱粉。');
 
 SET FOREIGN_KEY_CHECKS = 1;

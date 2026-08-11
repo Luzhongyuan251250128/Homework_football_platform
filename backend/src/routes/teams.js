@@ -156,7 +156,7 @@ router.get('/teams/:name/comments', async (req, res) => {
       id: c.id,
       teamId: c.team_id,
       parentId: c.parent_id,
-      author: { username: c.username, nickname: c.nickname || c.username },
+      author: { userId: c.user_id, username: c.username, nickname: c.nickname || c.username },
       content: c.content,
       createdAt: vtime.fmtDate(new Date(c.created_at))
     }))
@@ -202,7 +202,7 @@ router.post('/teams/:name/comments', authRequired, async (req, res) => {
       id: result.insertId,
       teamId: team.id,
       parentId: parent ? parent.id : null,
-      author: { username: req.user.username, nickname: req.user.username },
+      author: { userId: req.user.id, username: req.user.username, nickname: req.user.username },
       content: text,
       createdAt: vtime.fmtDate(new Date())
     }

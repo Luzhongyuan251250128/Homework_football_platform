@@ -40,13 +40,13 @@ router.get('/matches/:id/posts', async (req, res) => {
     );
     data.push({
       id: post.id,
-      author: { username: post.username, nickname: post.nickname || post.username },
+      author: { userId: post.user_id, username: post.username, nickname: post.nickname || post.username },
       content: post.content,
       createdAt: vtime.fmtDate(new Date(post.created_at)),
       comments: comments.map((c) => ({
         id: c.id,
         parentId: c.parent_id,
-        author: { username: c.username, nickname: c.nickname || c.username },
+        author: { userId: c.user_id, username: c.username, nickname: c.nickname || c.username },
         content: c.content,
         createdAt: vtime.fmtDate(new Date(c.created_at))
       }))
@@ -82,7 +82,7 @@ router.post('/matches/:id/posts', authRequired, async (req, res) => {
     message: '发帖成功',
     data: {
       id: result.insertId,
-      author: { username: req.user.username, nickname: req.user.username },
+      author: { userId: req.user.id, username: req.user.username, nickname: req.user.username },
       content: text,
       createdAt: vtime.fmtDate(new Date()),
       comments: []
@@ -111,7 +111,7 @@ router.get('/posts/:id/comments', async (req, res) => {
     data: rows.map((c) => ({
       id: c.id,
       parentId: c.parent_id,
-      author: { username: c.username, nickname: c.nickname || c.username },
+      author: { userId: c.user_id, username: c.username, nickname: c.nickname || c.username },
       content: c.content,
       createdAt: vtime.fmtDate(new Date(c.created_at))
     }))
@@ -160,7 +160,7 @@ router.post('/posts/:id/comments', authRequired, async (req, res) => {
     data: {
       id: result.insertId,
       parentId: parent ? parent.id : null,
-      author: { username: req.user.username, nickname: req.user.username },
+      author: { userId: req.user.id, username: req.user.username, nickname: req.user.username },
       content: text,
       createdAt: vtime.fmtDate(new Date())
     }

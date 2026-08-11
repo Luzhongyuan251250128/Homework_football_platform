@@ -84,7 +84,7 @@
           <p v-if="!predLoading && !predictions.length" class="dim">还没有人预测这场比赛</p>
           <div v-if="!predLoading" class="pred-list">
             <div v-for="p in predictions" :key="p.userId + '-' + p.predHome" class="pred-item">
-              <span class="nick">{{ p.nickname }}</span>
+              <router-link :to="`/users/${p.userId}`" class="nick-link">{{ p.nickname }}</router-link>
               <span class="chip">{{ p.predHome }} - {{ p.predAway }}</span>
               <span v-if="match.status === 'finished'" class="pts-chip" :class="ptsClass(p.pointsAwarded)">
                 {{ ptsText(p.pointsAwarded) }}
@@ -112,15 +112,15 @@
             <p v-if="!posts.length" class="dim">暂无讨论，来抢沙发！</p>
             <div v-for="post in posts" :key="post.id" class="post-item">
               <div class="post-head">
-                <span class="nick">{{ post.author.nickname }}</span>
+                <router-link :to="`/users/${post.author.userId}`" class="nick-link">{{ post.author.nickname }}</router-link>
                 <span class="dim small">{{ post.createdAt }}</span>
               </div>
               <p class="post-content">{{ post.content }}</p>
               <div class="comments">
                 <div v-for="c in topComments(post)" :key="c.id" class="comment-item">
                   <div class="comment-line">
-                    <span class="nick small">{{ c.author.nickname }}：</span>
-                    <span>{{ c.content }}</span>
+                    <router-link :to="`/users/${c.author.userId}`" class="nick-link small">{{ c.author.nickname }}</router-link>
+                    <span>：{{ c.content }}</span>
                   </div>
                   <div class="comment-actions">
                     <button v-if="userStore.isLoggedIn" class="reply-btn" @click="toggleReply(post, c)">回复</button>
@@ -138,7 +138,7 @@
                     </button>
                   </div>
                   <div v-for="r in repliesOf(post, c.id)" :key="r.id" class="reply-line">
-                    <span class="nick small">{{ r.author.nickname }}</span>
+                    <router-link :to="`/users/${r.author.userId}`" class="nick-link small">{{ r.author.nickname }}</router-link>
                     <span class="dim small">回复 @{{ parentNick(post, r.parentId) }}：</span>
                     <span>{{ r.content }}</span>
                   </div>

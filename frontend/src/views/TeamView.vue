@@ -125,7 +125,7 @@
         <div class="comment-list">
           <div v-for="c in topComments" :key="c.id" class="comment-item">
             <div class="comment-main">
-              <span class="nick">{{ c.author.nickname }}</span>
+              <router-link :to="`/users/${c.author.userId}`" class="nick-link">{{ c.author.nickname }}</router-link>
               <span class="dim small">{{ c.createdAt }}</span>
             </div>
             <p class="comment-text">{{ c.content }}</p>
@@ -146,7 +146,7 @@
             <div class="replies">
               <div v-for="r in repliesOf(c.id)" :key="r.id" class="reply-item">
                 <div>
-                  <span class="nick small">{{ r.author.nickname }}</span>
+                  <router-link :to="`/users/${r.author.userId}`" class="nick-link small">{{ r.author.nickname }}</router-link>
                   <span class="dim small">回复 @{{ parentNick(r.parentId) }}：</span>
                   <span class="small">{{ r.content }}</span>
                 </div>

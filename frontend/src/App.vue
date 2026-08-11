@@ -7,6 +7,7 @@
         </router-link>
         <nav class="nav">
           <router-link to="/">赛事</router-link>
+          <router-link to="/leaderboard">排行榜</router-link>
           <router-link v-if="userStore.isLoggedIn" to="/profile">个人中心</router-link>
         </nav>
         <div class="header-right">

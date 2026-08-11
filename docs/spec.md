@@ -156,6 +156,7 @@ t ≥ 结束        → finished（已结束）：显示比分；结算积分；
 | POST | /api/posts/:id/comments | 登录 | 评论 {content} |
 | GET | /api/me/predictions | 登录 | 我的预测记录（比赛信息、我的预测、points_awarded、比赛状态） |
 | GET | /api/me/points | 登录 | 我的积分（总量 + 明细可选） |
+| GET | /api/leaderboard | 公开（登录时附我的排名） | 积分排行榜：仅统计有预测记录的用户；按积分↓、猜中比分次数↓、id↑ 排序，同分同名次；含排名/昵称/积分/预测总数/猜中比分/猜中胜负 |
 | PUT | /api/admin/time | admin | 推进虚拟时间 `{hours: 1}` 或 `{virtual_time: "2026-07-11 18:00:00"}`；推进后同步执行结算（§2.4）与运行时内容生成（§4.3） |
 
 错误码约定：400 参数错误、401 未登录、403 无权限、404 不存在、409 冲突（已预测过/不可预测）。

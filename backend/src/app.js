@@ -7,6 +7,7 @@ const matchesRoutes = require('./routes/matches');
 const predictionsRoutes = require('./routes/predictions');
 const postsRoutes = require('./routes/posts');
 const meRoutes = require('./routes/me');
+const leaderboardRoutes = require('./routes/leaderboard');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api', matchesRoutes);
 app.use('/api', predictionsRoutes);
 app.use('/api', postsRoutes);
 app.use('/api', meRoutes);
+app.use('/api', leaderboardRoutes);
 app.use('/api', adminRoutes);
 
 app.use('/api', (req, res) => {

@@ -83,6 +83,16 @@
     "stats": { "totalPredictions": 8, "exact": 2, "correct": 2, "wrong": 4 } } }
 ```
 
+### GET /api/leaderboard
+积分排行榜（公开，登录时附 `myRank`）。仅统计**有预测记录**的用户；排序：积分 ↓ → 猜中比分次数 ↓ → id ↑；同分同名次（1、2、2、4）。
+```json
+{ "code": 0, "message": "ok",
+  "data": { "leaderboard": [
+      { "rank": 1, "userId": 2, "username": "小射手", "nickname": "小射手",
+        "points": 6, "totalPredictions": 8, "exactCount": 2, "correctCount": 2 } ],
+    "myRank": null } }
+```
+
 ## 7. 管理接口（管理员）
 
 ### PUT /api/admin/time

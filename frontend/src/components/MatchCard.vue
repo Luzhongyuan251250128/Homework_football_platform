@@ -34,6 +34,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 const props = defineProps({
@@ -42,10 +43,10 @@ const props = defineProps({
 
 const route = useRoute();
 
-const cardLink = {
+const cardLink = computed(() => ({
   path: `/matches/${props.match.id}`,
   query: route.query.league ? { league: route.query.league } : {}
-};
+}));
 
 function shortTime(t) {
   return t ? t.slice(5, 16) : '';

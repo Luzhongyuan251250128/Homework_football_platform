@@ -15,9 +15,9 @@
       <div class="podium">
         <div v-for="(u, idx) in top3" :key="u.userId" class="podium-card" :class="`medal-${idx + 1}`">
           <div class="medal">{{ ['🥇', '🥈', '🥉'][idx] }}</div>
-          <div class="p-name">{{ u.nickname }}</div>
+          <router-link :to="`/users/${u.userId}`" class="p-name">{{ u.nickname }}</router-link>
           <div class="p-points">{{ u.points }}</div>
-          <div class="p-detail">猜中比分 {{ u.exactCount }} 次 · 猜中胜负 {{ u.correctCount }} 次</div>
+          <div class="p-detail">已出结果 {{ u.settledCount }} 次 · 猜中比分 {{ u.exactCount }} 次 · 猜中胜负 {{ u.correctCount }} 次</div>
         </div>
       </div>
 
@@ -28,6 +28,7 @@
               <th>排名</th>
               <th>用户</th>
               <th>总预测</th>
+              <th>已出结果</th>
               <th>猜中比分</th>
               <th>猜中胜负</th>
               <th>积分</th>
@@ -43,10 +44,11 @@
                 <span class="rank-num">{{ u.rank }}</span>
               </td>
               <td>
-                <span class="nick">{{ u.nickname }}</span>
+                <router-link :to="`/users/${u.userId}`" class="nick-link">{{ u.nickname }}</router-link>
                 <span v-if="isMe(u)" class="me-tag">我</span>
               </td>
               <td>{{ u.totalPredictions }}</td>
+              <td>{{ u.settledCount }}</td>
               <td class="green">{{ u.exactCount }}</td>
               <td class="blue">{{ u.correctCount }}</td>
               <td class="points">{{ u.points }}</td>
@@ -168,6 +170,21 @@ onMounted(() => {
 .p-name {
   font-size: 18px;
   font-weight: 800;
+  color: var(--text);
+}
+
+.p-name:hover {
+  color: var(--accent);
+}
+
+.nick-link {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.nick-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .p-points {

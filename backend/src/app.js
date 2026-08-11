@@ -9,6 +9,7 @@ const postsRoutes = require('./routes/posts');
 const meRoutes = require('./routes/me');
 const leaderboardRoutes = require('./routes/leaderboard');
 const teamsRoutes = require('./routes/teams');
+const usersRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api', postsRoutes);
 app.use('/api', meRoutes);
 app.use('/api', leaderboardRoutes);
 app.use('/api', teamsRoutes);
+app.use('/api', usersRoutes);
 app.use('/api', adminRoutes);
 
 app.use('/api', (req, res) => {

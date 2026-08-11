@@ -97,13 +97,26 @@
 ```
 
 ### GET /api/leaderboard
-积分排行榜（公开，登录时附 `myRank`）。仅统计**有预测记录**的用户；排序：积分 ↓ → 猜中比分次数 ↓ → id ↑；同分同名次（1、2、2、4）。
+积分排行榜（公开，登录时附 `myRank`）。仅统计**有预测记录**的用户；排序：积分 ↓ → 猜中比分次数 ↓ → id ↑；同分同名次（1、2、2、4）。每行含 `totalPredictions`（总预测）与 `settledCount`（已出结果预测数）。
 ```json
 { "code": 0, "message": "ok",
   "data": { "leaderboard": [
       { "rank": 1, "userId": 2, "username": "小射手", "nickname": "小射手",
-        "points": 6, "totalPredictions": 8, "exactCount": 2, "correctCount": 2 } ],
+        "points": 6, "totalPredictions": 11, "settledCount": 3, "exactCount": 2, "correctCount": 0 } ],
     "myRank": null } }
+```
+
+### GET /api/users/:id/predictions
+用户预测主页（公开）。返回用户信息、预测统计与全部预测记录；每条含比赛信息、状态（未开赛/进行中/已完赛）、实际比分（未开赛为 null）、预测比分、结算得分（未出结果为 null）。前端按状态分为"过往预测"与"未来预测"。
+```json
+{ "code": 0, "message": "ok",
+  "data": { "user": { "id": 2, "username": "小射手", "nickname": "小射手", "role": "user", "points": 6 },
+    "stats": { "total": 11, "settled": 3, "exact": 2, "correct": 0, "wrong": 1, "pointsEarned": 6 },
+    "predictions": [ { "id": 1, "matchId": 1, "league": "world_cup", "round": "小组赛 A组",
+        "matchTime": "2026-07-06 18:00:00", "status": "finished",
+        "homeTeam": "阿根廷", "awayTeam": "墨西哥",
+        "predHome": 2, "predAway": 1, "homeScore": 2, "awayScore": 1,
+        "pointsAwarded": 3, "predictedAt": "2026-07-05 10:00:00" } ] } }
 ```
 
 ## 7. 管理接口（管理员）

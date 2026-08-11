@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <router-link to="/" class="back">← 返回赛事列表</router-link>
+    <router-link :to="backLink" class="back">← 返回赛事列表</router-link>
 
     <div v-if="match" class="detail">
       <div class="info-bar">
@@ -183,6 +183,10 @@ import { useVtimeStore } from '../store/vtime';
 const route = useRoute();
 const userStore = useUserStore();
 const vtimeStore = useVtimeStore();
+
+const backLink = route.query.league
+  ? { path: '/', query: { league: route.query.league } }
+  : '/';
 
 const match = ref(null);
 const loading = ref(true);

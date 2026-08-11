@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <router-link to="/" class="back">← 返回赛事列表</router-link>
+    <router-link :to="backLink" class="back">← 返回赛事列表</router-link>
 
     <div v-if="data" class="team-page">
       <div class="team-head">
@@ -174,6 +174,10 @@ import { useVtimeStore } from '../store/vtime';
 const route = useRoute();
 const userStore = useUserStore();
 const vtimeStore = useVtimeStore();
+
+const backLink = computed(() =>
+  data.value ? { path: '/', query: { league: data.value.team.league } } : '/'
+);
 
 const data = ref(null);
 const loading = ref(true);

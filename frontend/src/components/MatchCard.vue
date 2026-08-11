@@ -1,5 +1,5 @@
 <template>
-  <router-link :to="`/matches/${match.id}`" class="card">
+  <router-link :to="cardLink" class="card">
     <div class="card-top">
       <span :class="['badge', match.league === 'world_cup' ? 'badge-wc' : 'badge-spl']">
         {{ match.leagueText }}
@@ -34,9 +34,18 @@
 </template>
 
 <script setup>
-defineProps({
+import { useRoute } from 'vue-router';
+
+const props = defineProps({
   match: { type: Object, required: true }
 });
+
+const route = useRoute();
+
+const cardLink = {
+  path: `/matches/${props.match.id}`,
+  query: route.query.league ? { league: route.query.league } : {}
+};
 
 function shortTime(t) {
   return t ? t.slice(5, 16) : '';

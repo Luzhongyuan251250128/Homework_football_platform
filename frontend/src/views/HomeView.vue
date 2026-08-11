@@ -5,6 +5,16 @@
       <p class="sub">世界杯 / 苏超（江苏省城市足球联赛）赛程、比分与预测</p>
     </div>
 
+    <div class="rules-box">
+      <div class="rules-title">🎯 得分要求</div>
+      <div class="rules-items">
+        <span class="rule-item"><b>猜中准确比分</b> +3 分</span>
+        <span class="rule-item"><b>猜中胜平负方向</b> +1 分</span>
+        <span class="rule-item">猜错 +0 分</span>
+        <span class="rule-item">比赛结束后自动结算，积分计入个人中心与排行榜</span>
+      </div>
+    </div>
+
     <div class="league-tabs">
       <button
         v-for="tab in tabs"
@@ -130,6 +140,47 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
+}
+
+.rules-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.rules-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.rules-items {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rule-item {
+  font-size: 13px;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+.rule-item b {
+  color: var(--text);
+  margin-right: 4px;
 }
 
 .tab {

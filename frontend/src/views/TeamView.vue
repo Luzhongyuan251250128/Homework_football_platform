@@ -116,7 +116,7 @@
             :placeholder="userStore.isLoggedIn ? '说说你对这支球队的看法…' : '登录后可评价'"
             :disabled="!userStore.isLoggedIn"
           ></textarea>
-          <button class="btn btn-sm" :disabled="!userStore.isLoggedIn || submitting || !newComment.trim()" @click="submitComment(null)">
+          <button class="btn btn-sm" :disabled="!userStore.isLoggedIn || submitting || !newComment.trim()" @click="submitComment(null, newComment.trim())">
             发布评价
           </button>
         </div>
@@ -226,6 +226,7 @@ function toggleReply(c) {
 }
 
 async function submitComment(parentId, text) {
+  if (!text || !text.trim()) return;
   submitting.value = true;
   commentError.value = '';
   try {

@@ -83,7 +83,6 @@ function isMe(u) {
 }
 
 async function fetchData() {
-  loading.value = true;
   try {
     const data = await api.get('/leaderboard');
     leaderboard.value = data.leaderboard;

@@ -226,7 +226,6 @@ const ptsClass = (v) => {
 };
 
 async function fetchMatch() {
-  loading.value = true;
   try {
     match.value = await api.get(`/matches/${route.params.id}`);
   } catch (err) {
@@ -237,7 +236,6 @@ async function fetchMatch() {
 }
 
 async function fetchPosts() {
-  postsLoading.value = true;
   try {
     posts.value = await api.get(`/matches/${route.params.id}/posts`);
   } catch (err) {
